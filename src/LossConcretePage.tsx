@@ -221,7 +221,7 @@ function LossConcretePage({ dashboardData }: LossConcretePageProps) {
       </div>
 
       {/* Charts row */}
-      <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Trend chart */}
         <div className="flex-1 min-w-0 bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5 shadow-lg backdrop-blur-sm">
           <div className="flex flex-wrap justify-between items-start gap-3 mb-4">

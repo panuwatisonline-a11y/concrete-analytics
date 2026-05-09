@@ -344,50 +344,50 @@ function ConcreteDashboard() {
       </div>
 
       {/* ── PAGE NAVIGATION TABS ── */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         <button
           onClick={() => setCurrentPage('dashboard')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             currentPage === 'dashboard'
               ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
               : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60 border border-slate-700/50'
           }`}
         >
-          <LayoutDashboard size={16} />
+          <LayoutDashboard size={15} />
           Dashboard
         </button>
         <button
           onClick={() => setCurrentPage('mixcode')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             currentPage === 'mixcode'
               ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
               : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60 border border-slate-700/50'
           }`}
         >
-          <Layers size={16} />
-          Concrete Balance
+          <Layers size={15} />
+          <span className="hidden xs:inline">Concrete </span>Balance
         </button>
         <button
           onClick={() => setCurrentPage('loss')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             currentPage === 'loss'
               ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/25'
               : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60 border border-slate-700/50'
           }`}
         >
-          <AlertTriangle size={16} />
-          Loss Concrete
+          <AlertTriangle size={15} />
+          <span className="hidden xs:inline">Loss </span>Concrete
         </button>
         <button
           onClick={() => setCurrentPage('summary')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             currentPage === 'summary'
               ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
               : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60 border border-slate-700/50'
           }`}
         >
-          <ClipboardList size={16} />
-          Concrete Summary
+          <ClipboardList size={15} />
+          <span className="hidden xs:inline">Concrete </span>Summary
         </button>
       </div>
 

@@ -429,7 +429,7 @@ export default function ConcreteSummaryPage({ cstData, machineData, mixCodeData,
                 { label: 'Concrete Works',  center: false },
                 { label: 'Structure',       center: false },
                 { label: 'Location',        center: false },
-                { label: 'Structure No.',   center: false },
+                { label: 'Structure No.',   center: false, minWidth: '12rem' },
                 { label: 'Supplier',        center: false },
                 { label: 'Slump',           center: true  },
                 { label: 'Mix Code',        center: false },
@@ -440,9 +440,10 @@ export default function ConcreteSummaryPage({ cstData, machineData, mixCodeData,
                 { label: 'Avg 28 Days',     center: true  },
                 { label: 'Result',          center: true  },
                 { label: 'Reports',         center: true  },
-              ].map(({ label, center }) => (
+              ].map(({ label, center, minWidth }) => (
                 <th
                   key={label}
+                  style={minWidth ? { minWidth } : undefined}
                   className={`px-3 py-3 text-${center ? 'center' : 'left'} text-xs font-semibold whitespace-nowrap border-b ${
                     isDark ? 'text-slate-300 border-slate-700/50' : 'text-slate-600 border-slate-200'
                   }`}
@@ -469,7 +470,7 @@ export default function ConcreteSummaryPage({ cstData, machineData, mixCodeData,
                 <td className={td}>{row.concreteWorks}</td>
                 <td className={td}>{row.structure}</td>
                 <td className={td}>{row.location}</td>
-                <td className={td}>{row.structureNo}</td>
+                <td className={td} style={{ minWidth: '12rem' }}>{row.structureNo}</td>
                 <td className={td}>{row.supplier}</td>
                 <td className={tdC}>{row.slump}</td>
                 <td className={`px-3 py-2.5 text-xs font-mono ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>
@@ -528,7 +529,7 @@ export default function ConcreteSummaryPage({ cstData, machineData, mixCodeData,
                   {row.files.length === 0 ? (
                     <span className={`text-xs ${isDark ? 'text-slate-600' : 'text-slate-300'}`}>—</span>
                   ) : (
-                    <div className="flex flex-wrap gap-1 justify-center">
+                    <div className="flex flex-nowrap gap-1 justify-center overflow-x-auto">
                       {row.files.map(f => (
                         <a
                           key={f.age}
@@ -536,15 +537,14 @@ export default function ConcreteSummaryPage({ cstData, machineData, mixCodeData,
                           target="_blank"
                           rel="noopener noreferrer"
                           title={f.reportNo || `Age ${f.age} days`}
-                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold border transition-all hover:scale-105 active:scale-95 ${
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border transition-all hover:scale-105 active:scale-95 flex-shrink-0 ${
                             isDark
                               ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25'
                               : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
                           }`}
                         >
                           <FileText size={11} strokeWidth={2.5} className="text-red-500 flex-shrink-0" />
-                          <span>PDF</span>
-                          <span className={`opacity-60`}>{f.age}D</span>
+                          <span>{f.age}D</span>
                         </a>
                       ))}
                     </div>
