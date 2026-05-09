@@ -1,17 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  LayoutDashboard, Layers, AlertTriangle,
+  LayoutDashboard, Layers, AlertTriangle, ClipboardList,
   X, Filter, Sparkles, Calendar, Sun, Moon, RefreshCw,
 } from 'lucide-react';
 import ThemeContext from './ThemeContext';
 import DashboardPage from './DashboardPage';
 import MixCodeBalancePage from './MixCodeBalancePage';
 import LossConcretePage from './LossConcretePage';
+import ConcreteSummaryPage from './ConcreteSummaryPage';
 import { generateMockData } from './mockData';
-import { parseGSheetRows } from './parseGSheet';
+import { parseGSheetRows, parseGSheetGeneric } from './parseGSheet';
 import {
   STATUS_INFO,
-  GOOGLE_SHEET_ID, SHEET_NAME, MIXCODE_SHEET_NAME, USE_GOOGLE_SHEETS,
+  GOOGLE_SHEET_ID, SHEET_NAME, MIXCODE_SHEET_NAME, CST_SHEET_NAME, MACHINE_SHEET_NAME, USE_GOOGLE_SHEETS,
 } from './constants';
 import type { ConcreteRecord, Filters } from './types';
 import steconLogo   from './assets/stecon-logo.svg';
@@ -20,12 +21,13 @@ import claudeLogo   from './assets/claude-logo.png';
 import netlifyLogo  from './assets/netlify-logo.png';
 import reactLogo    from './assets/react-logo.png';
 
-type PageKey = 'dashboard' | 'mixcode' | 'loss';
+type PageKey = 'dashboard' | 'mixcode' | 'loss' | 'summary';
 
 const PAGE_TITLES: Record<PageKey, string> = {
-  mixcode: 'Concrete Works | Concrete Balance',
-  loss:    'Concrete Works | Loss Concrete',
-  dashboard: 'Concrete Works | Dashboard',
+  mixcode:  'Concrete Works | Concrete Balance',
+  loss:     'Concrete Works | Loss Concrete',
+  dashboard:'Concrete Works | Dashboard',
+  summary:  'Concrete Works | Concrete Summary',
 };
 
 function ConcreteDashboard() {
@@ -36,6 +38,10 @@ function ConcreteDashboard() {
   const [mixCodeData,    setMixCodeData]    = useState<ConcreteRecord[]>([]);
   const [mixCodeLoading, setMixCodeLoading] = useState<boolean>(false);
   const [mixCodeFetched, setMixCodeFetched] = useState<boolean>(false);
+  const [cstData,        setCstData]        = useState<Record<string, string>[]>([]);
+  const [machineData,    setMachineData]    = useState<Record<string, string>[]>([]);
+  const [cstLoading,     setCstLoading]     = useState<boolean>(false);
+  const [cstFetched,     setCstFetched]     = useState<boolean>(false);
   const [filters,        setFilters]        = useState<Filters>({ status: null, supplier: null, structure: null, staff: null, strength: null });
   const [dateRange,      setDateRange]      = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [showAboutModal, setShowAboutModal] = useState<boolean>(false);
@@ -100,8 +106,61 @@ function ConcreteDashboard() {
     setIsRefreshing(true);
     setMixCodeData([]);
     setMixCodeFetched(false);
+    setCstData([]);
+    setMachineData([]);
+    setCstFetched(false);
     setRefreshKey(k => k + 1);
   }, []);
+
+  useEffect(() => {
+    if (currentPage !== 'summary' || cstFetched) return;
+    setCstLoading(true);
+    (async () => {
+      const fetchGeneric = async (sheetName: string): Promise<Record<string, string>[]> => {
+        const url  = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+        const res  = await fetch(url);
+        const text = await res.text();
+        const json = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/)?.[1];
+        if (!json) throw new Error(`Cannot parse sheet: ${sheetName}`);
+        return parseGSheetGeneric(JSON.parse(json));
+      };
+      const fetchMixCode = async () => {
+        const url  = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(MIXCODE_SHEET_NAME)}`;
+        const res  = await fetch(url);
+        const text = await res.text();
+        const json = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/)?.[1];
+        if (!json) throw new Error('Cannot parse Mix Code sheet');
+        return parseGSheetRows(JSON.parse(json));
+      };
+      try {
+        const fetches: Promise<unknown>[] = [
+          fetchGeneric(CST_SHEET_NAME),
+          fetchGeneric(MACHINE_SHEET_NAME),
+        ];
+        if (!mixCodeFetched) fetches.push(fetchMixCode());
+
+        const results = await Promise.all(fetches);
+        const cstParsed     = results[0] as Record<string, string>[];
+        const machineParsed = results[1] as Record<string, string>[];
+        console.log('[CST] Parsed rows:', cstParsed.length, '| Headers:', cstParsed[0] ? Object.keys(cstParsed[0]) : []);
+        setCstData(cstParsed);
+        setMachineData(machineParsed);
+        if (!mixCodeFetched) {
+          const mc = results[2] as typeof mixCodeData;
+          console.log('[MixCode via Summary] Parsed rows:', mc.length);
+          setMixCodeData(mc);
+          setMixCodeFetched(true);
+        }
+      } catch (err) {
+        console.error('CST/Machine/MixCode fetch error:', err);
+        setCstData([]);
+        setMachineData([]);
+      } finally {
+        setCstLoading(false);
+        setCstFetched(true);
+      }
+    })();
+  }, [currentPage, cstFetched, mixCodeFetched]);
 
   useEffect(() => {
     if (currentPage !== 'mixcode' || mixCodeFetched) return;
@@ -319,17 +378,28 @@ function ConcreteDashboard() {
           <AlertTriangle size={16} />
           Loss Concrete
         </button>
+        <button
+          onClick={() => setCurrentPage('summary')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            currentPage === 'summary'
+              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
+              : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-700/60 border border-slate-700/50'
+          }`}
+        >
+          <ClipboardList size={16} />
+          Concrete Summary
+        </button>
       </div>
 
       {/* ── TAB CONTENT ── */}
       {currentPage === 'loss' && (
-        <LossConcretePage dashboardData={data} />
+        <LossConcretePage dashboardData={filteredData} />
       )}
 
       {currentPage === 'mixcode' && (
         <MixCodeBalancePage
           mixCodeData={mixCodeData}
-          dashboardData={data}
+          dashboardData={filteredData}
           loading={mixCodeLoading}
         />
       )}
@@ -339,6 +409,16 @@ function ConcreteDashboard() {
           filteredData={filteredData}
           filters={filters}
           toggleFilter={toggleFilter}
+        />
+      )}
+
+      {currentPage === 'summary' && (
+        <ConcreteSummaryPage
+          cstData={cstData}
+          machineData={machineData}
+          mixCodeData={mixCodeData}
+          dashboardData={filteredData}
+          loading={cstLoading}
         />
       )}
 

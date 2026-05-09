@@ -27,4 +27,6 @@ export const SUPPLIER_COLORS: string[] = ['#EC4899','#A855F7','#3B82F6','#14B8A6
 export const GOOGLE_SHEET_ID    = '1BrewymiKRqJaiVuR1hJv3xJaM4EJW967NzdbNJAQeA8';
 export const SHEET_NAME         = 'Dashboard';
 export const MIXCODE_SHEET_NAME = 'Mix Code';
-export const USE_GOOGLE_SHEETS  = true;
+export const CST_SHEET_NAME         = 'CST';
+export const MACHINE_SHEET_NAME     = 'Compression Machine';
+export const USE_GOOGLE_SHEETS      = true;

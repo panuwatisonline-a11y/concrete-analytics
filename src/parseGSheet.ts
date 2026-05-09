@@ -23,6 +23,55 @@ export interface GSheetResponse {
   table: GSheetTable;
 }
 
+export function parseGSheetGeneric(jsonData: GSheetResponse): Record<string, string>[] {
+  let headers = jsonData.table.cols.map((col) => (col.label || '').trim());
+  let dataRows = jsonData.table.rows || [];
+
+  const hasColHeaders = headers.some(h => h !== '');
+  if (!hasColHeaders && dataRows.length > 0) {
+    const firstRow = dataRows[0];
+    if (firstRow?.c) {
+      const firstRowVals = firstRow.c.map(cell => {
+        if (!cell) return '';
+        return String(cell.v ?? cell.f ?? '').trim();
+      });
+      const textCount = firstRowVals.filter(v => v && isNaN(Number(v))).length;
+      if (textCount >= 3) {
+        headers  = firstRowVals;
+        dataRows = dataRows.slice(1);
+      }
+    }
+  }
+
+  if (!headers.some(h => h !== '')) return [];
+
+  return dataRows
+    .filter(row => row?.c?.some(cell => cell && cell.v !== null && cell.v !== undefined && cell.v !== ''))
+    .map(row => {
+      const obj: Record<string, string> = {};
+      if (row?.c) {
+        row.c.forEach((cell, i) => {
+          if (!headers[i]) return;
+          let val = '';
+          if (cell) {
+            if (typeof cell.v === 'string' && cell.v.startsWith('Date(')) {
+              const m = cell.v.match(/Date\((\d+),\s*(\d+),\s*(\d+)/);
+              if (m) {
+                val = `${m[1]}-${String(+m[2] + 1).padStart(2,'0')}-${String(+m[3]).padStart(2,'0')}`;
+              } else {
+                val = String(cell.f || cell.v || '').trim();
+              }
+            } else {
+              val = String(cell.v ?? cell.f ?? '').trim();
+            }
+          }
+          obj[headers[i]] = val;
+        });
+      }
+      return obj;
+    });
+}
+
 export function parseGSheetRows(jsonData: GSheetResponse): ConcreteRecord[] {
   let headers = jsonData.table.cols.map((col) => (col.label || '').trim());
   let dataRows = jsonData.table.rows || [];
