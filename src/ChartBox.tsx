@@ -30,7 +30,7 @@ const ChartBox = ({ title, isActive, onClear, children }: ChartBoxProps) => (
       )}
     </div>
     {/* ใช้ explicit height บน div แทน flex-1 เพื่อหนีปัญหา width(-1) height(-1) */}
-    <div style={{ height: 220, width: '100%' }}>
+    <div className="h-[220px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         {children}
       </ResponsiveContainer>
